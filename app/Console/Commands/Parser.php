@@ -39,7 +39,7 @@ class Parser extends Command
      */
     public function handle()
     {
-        $this->process();
+        $this->generate();
     }
     
     function process()
