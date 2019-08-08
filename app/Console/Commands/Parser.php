@@ -76,6 +76,8 @@ class Parser extends Command
                 
                 $parser->response = $page->response;
                 $parser->save();
+                
+                sleep(1);
             }
             
         });        
