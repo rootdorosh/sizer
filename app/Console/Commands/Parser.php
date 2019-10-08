@@ -46,8 +46,8 @@ class Parser extends Command
     function process()
     {
         $result = DB::select(DB::raw("SELECT updated_at, id FROM parser WHERE updated_at IS NOT NULL ORDER BY updated_at DESC"));
-        $time = (int) $result[0]->updated_at;
-        $id = (int) $result[0]->id;
+        $time = isset($result[0]) ? ((int) $result[0]->updated_at) : 0;
+        $id = isset($result[0]) ? ((int) $result[0]->id) : 0;
         if ($time >= strtotime('-1 minute')) {
             return;
         }
