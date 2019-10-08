@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\Parser as ParserModel;
 use App\Services\Curl;
+use DB;
 
 class Parser extends Command
 {
@@ -25,7 +26,7 @@ class Parser extends Command
     /**
      * Create a new command instance.
      *
-     * @return void
+     * @return void  
      */
     public function __construct()
     {
@@ -44,11 +45,18 @@ class Parser extends Command
     
     function process()
     {
+        $result = DB::select(DB::raw("SELECT updated_at, id FROM parser WHERE updated_at IS NOT NULL ORDER BY updated_at DESC"));
+        $time = (int) $result[0]->updated_at;
+        $id = (int) $result[0]->id;
+        if ($time >= strtotime('-1 minute')) {
+            return;
+        }
+        
         $data = file_get_contents('http://filefab.com/api.php?l=Nmlu9vQZ2E709_R32IXr7S3-4nGwdzAd4sc_jgf9sho');
         $proxies = explode("\n", str_replace(['<pre>', '</pre>'], '', $data));
         unset($proxies[count($proxies)-1]);
         
-        ParserModel::whereNull('response')->chunk(2, function ($parsers) use ($proxies) {
+        ParserModel::whereNull('response')->whereRaw("id >= {$id}")->chunk(2, function ($parsers) use ($proxies) {
             foreach ($parsers as $parser) {
                 echo $parser->id . "\n";
                 
@@ -75,6 +83,7 @@ class Parser extends Command
                     ->close();
                 
                 $parser->response = $page->response;
+                $parser->updated_at = time();
                 $parser->save();
                 
                 sleep(1);
